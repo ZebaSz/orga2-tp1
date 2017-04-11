@@ -823,6 +823,7 @@ je cantidadDeCaminos_done
 
 mov r14, [rbx + nodo_dato_offset]
 mov rdi, [r14 + ruta_ciudadA_offset]
+mov rdi, [rdi + ciudad_nombre_offset]
 mov rsi, r12
 
 call str_cmp
@@ -830,6 +831,7 @@ cmp rax, 0
 je encontreUnCamino
 
 mov rdi, [r14 + ruta_ciudadB_offset]
+mov rdi, [rdi + ciudad_nombre_offset]
 mov rsi, r12
 
 call str_cmp
