@@ -166,7 +166,7 @@ mov rdi, [rdi + nodo_dato_offset]
 mov rsi, [r15 + nodo_dato_offset]
 
 call r14
-cmp rax, 1
+cmp rax, 0
 jl l_agregarOrdenado_done
 
 mov r12, [r12]
@@ -748,7 +748,33 @@ ret
 
 global totalDeDistancia
 totalDeDistancia:
-; TODO
+push rbp
+mov rbp, rsp
+push rbx
+push r12
+push r13
+
+pxor xmm0, xmm0
+
+mov rbx, [rdi + redCaminera_rutas_offset]
+mov rbx, [rbx + lista_primero_offset]
+
+cmp rbx, 0
+je totalDeDistancia_done
+totalDeDistancia_while:
+
+mov r8, [rbx + nodo_dato_offset]
+
+addsd xmm0, [r8 + ruta_distancia_offset]
+
+totalDeDistancia_done:
+
+movq rax, xmm0
+
+pop r13
+pop r12
+pop rbx
+pop rbp
 ret
 
 global totalDePoblacion
