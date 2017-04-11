@@ -790,7 +790,7 @@ mov rbx, [rbx + lista_primero_offset]
 xor rax, rax
 totalDePoblacion_loop:
 cmp rbx, 0
-jmp totalDePoblacion_done
+je totalDePoblacion_done
 mov r8, [rbx + nodo_dato_offset]
 mov r8, [r8 + ciudad_poblacion_offset]
 add rax, r8
