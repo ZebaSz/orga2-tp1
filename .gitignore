@@ -1,0 +1,5 @@
+core
+main
+tester
+salida.*
+*.o
