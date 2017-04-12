@@ -759,13 +759,16 @@ pxor xmm0, xmm0
 mov rbx, [rdi + redCaminera_rutas_offset]
 mov rbx, [rbx + lista_primero_offset]
 
+totalDeDistancia_loop:
 cmp rbx, 0
 je totalDeDistancia_done
-totalDeDistancia_while:
 
 mov r8, [rbx + nodo_dato_offset]
 
 addsd xmm0, [r8 + ruta_distancia_offset]
+
+mov rbx, [rbx + nodo_siguiente_offset]
+jmp totalDeDistancia_loop
 
 totalDeDistancia_done:
 
