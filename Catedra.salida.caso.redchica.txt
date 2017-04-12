@@ -174,7 +174,6 @@ Rutas:
 Nombre:
 ufa
 Ciudades:
-[asdgwg,130]
 Rutas:
 Nombre:
 r1
