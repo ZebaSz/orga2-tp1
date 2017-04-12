@@ -7,7 +7,7 @@ void rc_imprimirTodo(redCaminera* rc, FILE *pFile) {
 	fputs("\nCiudades:\n", pFile);
 	for(nodo* c = rc->ciudades->primero; c != NULL; c = c->siguiente) {
 		ciudad* ciudad = c->dato;
-		fprintf(pFile, "[%s,%"PRIu64"]\n", ciudad->nombre, ciudad->poblacion);
+		fprintf(pFile, "[%s,%lu]\n", ciudad->nombre, ciudad->poblacion);
 	}
 	fputs("Rutas:\n", pFile);
 	for(nodo* r = rc->rutas->primero; r != NULL; r = r->siguiente) {
