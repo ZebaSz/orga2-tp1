@@ -44,7 +44,7 @@ redCaminera* rc_obtenerSubRed(char* nombre, redCaminera* rc, lista* ciudades) {
 	for(nodo* c = ciudades->primero; c != NULL; c = c->siguiente) {
 		ciudad* anterior = obtenerCiudad(rc, ((ciudad*)c->dato)->nombre);
 		if(anterior != NULL) {
-			rc_agregarCiudad(nueva, anterior->nombre, anterior->poblacion);
+			rc_agregarCiudad(nueva, ((ciudad*)c->dato)->nombre, ((ciudad*)c->dato)->poblacion);
 		}
 	}
 	for(nodo* r = rc->rutas->primero; r != NULL; r = r->siguiente) {
