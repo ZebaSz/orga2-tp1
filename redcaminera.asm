@@ -471,6 +471,22 @@ mov r12, rsi
 mov r13, rdx
 movq r14, xmm0
 
+mov rdi, r12
+mov rsi, r13
+call str_cmp
+cmp rax, 0
+je rc_agregarRuta_done ; si son iguales, no crear ruta
+jg rc_agregarRuta_verificar ; ordenar lexicograficamente
+
+mov r8, r12
+mov r12, r13
+mov r13, r8
+
+rc_agregarRuta_verificar:
+
+mov rdi, rbx
+mov rsi, r12
+mov rdx, r13
 call obtenerRuta
 cmp rax, 0
 jne rc_agregarRuta_done ; si la ruta existe, no crear ruta
