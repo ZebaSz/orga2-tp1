@@ -43,12 +43,11 @@ extern malloc
 global l_crear
 l_crear:
 mov rdi, lista_size
-call malloc WRT ..plt
+call malloc WRT ..plt ; pido memoria para la lista
 xor rsi, rsi
-
-mov [rax + lista_longitud_offset], dword 0
-mov [rax + lista_primero_offset], rsi
-mov [rax + lista_ultimo_offset], rsi
+mov [rax + lista_longitud_offset], dword 0 ; longitud vacia
+mov [rax + lista_primero_offset], rsi ; primero nulo
+mov [rax + lista_ultimo_offset], rsi ; ultimo nulo
 ret
 
 
@@ -76,12 +75,8 @@ mov [rax + nodo_anterior_offset], rdi ; seteo el anterior a null
 mov rdi, [rbx + lista_primero_offset] ; me fijo si había un primer nodo
 mov [rax + nodo_siguiente_offset], rdi
 cmp rdi, 0
-je noHayPrimero
+je l_agregarUnico
 mov [rdi + nodo_anterior_offset], rax ; si había, le agrego este de anterior
-jmp agregarAdelante
-noHayPrimero:
-mov [rbx + lista_ultimo_offset], rax ; si no había, también es el último
-agregarAdelante:
 mov [rbx + lista_primero_offset], rax ; ahora es el primero
 
 jmp terminarInsercion
@@ -111,16 +106,17 @@ mov [rax + nodo_siguiente_offset], rdi
 mov rdi, [rbx + lista_ultimo_offset]
 mov [rax + nodo_anterior_offset], rdi
 cmp rdi, 0
-je noHayUltimo
+je l_agregarUnico
 mov [rdi + nodo_siguiente_offset], rax
 jmp agregarAtras
 
-noHayUltimo:
-mov [rbx + lista_primero_offset], rax
+l_agregarUnico:
+mov [rbx + lista_primero_offset], rax ; si no había, también es el primero
 agregarAtras:
-mov [rbx + lista_ultimo_offset], rax
+mov [rbx + lista_ultimo_offset], rax ; ahora es el ultimo
 
 jmp terminarInsercion
+
 
 global l_agregarOrdenado
 l_agregarOrdenado:
@@ -145,48 +141,47 @@ mov r15, rax ; y lo guardo
 mov [r15 + nodo_dato_offset], r12 ; le seteo el dato
 mov [r15 + nodo_borrar_offset], r13 ; y la funcion borrar
 xor rdi, rdi
-mov [r15 + nodo_siguiente_offset], rdi
+mov [r15 + nodo_siguiente_offset], rdi ; seteo nodos a null por default
 mov [r15 + nodo_anterior_offset], rdi
 
 mov r12, rbx
-add r12, lista_primero_offset ; tomo el puntero a puntero del primero de la lista
+add r12, lista_primero_offset ; tomo el puntero doble al primero de la lista
 mov r13, rbx
-add r13, lista_ultimo_offset ; y del ultimo de la lista
+add r13, lista_ultimo_offset ; y al ultimo de la lista
 xor rdi, rdi
 cmp [r12], rdi ; si no hay primero
 je l_agregarOrdenado_unico ; entonces lo agrego adelante y atras
 
 l_agregarOrdenado_loop:
-
 mov r13, [r12]
-add r13, nodo_anterior_offset
+add r13, nodo_anterior_offset ; avanzo el doble puntero siguiente
 
 mov rdi, [r12]
-mov rdi, [rdi + nodo_dato_offset]
-mov rsi, [r15 + nodo_dato_offset]
+mov rdi, [rdi + nodo_dato_offset] ; tomo el dato del siguiente
+mov rsi, [r15 + nodo_dato_offset] ; y del nuevo nodo
 
-call r14
-cmp rax, 1
-jl l_agregarOrdenado_done
+call r14 ; los comparo con la funcion provista
+cmp rax, 1 ; si el siguiente es mayor o igual
+jl l_agregarOrdenado_done ; inserto aca
 
 mov r12, [r12]
-add r12, nodo_siguiente_offset
+add r12, nodo_siguiente_offset ; avanzo el doble puntero anterior
 xor rdi, rdi
-cmp [r12], rdi ; si el "proximo" es nulo, es el ultimo
-je l_agregarOrdenado_ultimo
+cmp [r12], rdi ; si el siguiente es nulo
+je l_agregarOrdenado_ultimo ; inserto al final
 
 jmp l_agregarOrdenado_loop
 
 l_agregarOrdenado_ultimo:
 mov r13, rbx
-add r13, lista_ultimo_offset
-mov r8, [r13]
-xor r9, r9
+add r13, lista_ultimo_offset ; recupero el puntero doble del ultimo de la lista
+mov r8, [r13] ; el anterior es el viejo ultimo
+xor r9, r9 ; no hay siguiente
 jmp l_agregarOrdenado_guardarPrevios
 
 l_agregarOrdenado_primero:
-xor r8, r8
-mov r9, [r12]
+xor r8, r8 ; no hay anterior
+mov r9, [r12] ; el siguiente es el viejo primero
 jmp l_agregarOrdenado_guardarPrevios
 
 l_agregarOrdenado_done:
@@ -199,25 +194,24 @@ mov r8, [r8 + nodo_anterior_offset]
 mov r9, [r13]
 mov r9, [r9 + nodo_siguiente_offset]
 l_agregarOrdenado_guardarPrevios:
-mov [r15 + nodo_anterior_offset], r8
-mov [r15 + nodo_siguiente_offset], r9
+mov [r15 + nodo_anterior_offset], r8 ; guardo el nuevo anterior
+mov [r15 + nodo_siguiente_offset], r9 ; y siguiente del nodo a insertar
 l_agregarOrdenado_unico:
-mov [r12], r15
+mov [r12], r15 ; inserto el nodo donde corresponde
 mov [r13], r15
 
 pop r15
 pop r14
 
-terminarInsercion:
-mov rdi, [rbx + lista_longitud_offset]
-inc rdi
-mov [rbx + lista_longitud_offset], rdi
+terminarInsercion: ; al final de todas las inserciones
+mov r8d, [rbx + lista_longitud_offset]
+inc r8d
+mov [rbx + lista_longitud_offset], r8d ; aumento la longitud de la lista
 
 pop r13
 pop r12
 pop rbx
 pop rbp
-
 ret
 
 global l_borrarTodo
@@ -228,29 +222,28 @@ push rbx
 push r12
 push r13
 
-mov rbx, rdi ; me guardo la lista para usar frees
+mov rbx, rdi ; me guardo la lista
 mov r12, [rbx + lista_primero_offset]
-cmp r12, 0
-je borrar_done
 borrar_while:
+cmp r12, 0
+je borrar_done ; si el nodo es nulo, termine
 mov r13, [r12 + nodo_siguiente_offset]
 
 mov rdi, [r12 + nodo_dato_offset]
 mov r8, [r12 + nodo_borrar_offset]
 
-call r8
+call r8 ; borro el dato con su funcion de borrado
 
 mov rdi, r12
-call free WRT ..plt
+call free WRT ..plt ; borro el nodo
 
 mov r12, r13
-cmp r12, 0
-jne borrar_while
+jmp borrar_while
 
 borrar_done:
 
 mov rdi, rbx
-call free WRT ..plt
+call free WRT ..plt ; borro la lista
 
 pop r13
 pop r12
@@ -272,12 +265,12 @@ mov r13, rsi ; me guardo la población
 
 call str_copy
 
-mov r12, rax ; me guardo el nombre
+mov r12, rax ; me guardo el nombre copiado
 
 mov rdi, ciudad_size
-call malloc WRT ..plt
+call malloc WRT ..plt ; pido memoria para la ciudad
 
-mov [rax + ciudad_nombre_offset], r12
+mov [rax + ciudad_nombre_offset], r12 ; le guardo su informacion
 mov [rax + ciudad_poblacion_offset], r13
 
 pop r13
@@ -290,7 +283,7 @@ global c_cmp
 c_cmp:
 mov rdi, [rdi + ciudad_nombre_offset]
 mov rsi, [rsi + ciudad_nombre_offset]
-call str_cmp
+call str_cmp ; comparo las ciudades por sus nombres
 ret
 
 global c_borrar
@@ -302,10 +295,10 @@ push rbx
 mov rbx, rdi
 
 mov rdi, [rbx + ciudad_nombre_offset]
-call free WRT ..plt
+call free WRT ..plt ; borro el nombre
 
 mov rdi, rbx
-call free WRT ..plt
+call free WRT ..plt ; borro la ciudad
 
 pop rbx
 pop rbp
@@ -332,19 +325,17 @@ jg r_crear_ordenado ; ordenar lexicograficamente
 
 mov r9, rbx
 mov rbx, r12
-mov r12, r9
+mov r12, r9 ; invierto los nombres para que esten ordenados
 
 r_crear_ordenado:
-
 mov rdi, ruta_size
-call malloc WRT ..plt
+call malloc WRT ..plt ; pido memoria para la ruta
 
 mov [rax + ruta_ciudadA_offset], rbx
 mov [rax + ruta_distancia_offset], r13
 mov [rax + ruta_ciudadB_offset], r12
 
 r_crear_done:
-
 pop r13
 pop r12
 pop rbx
@@ -364,14 +355,14 @@ mov r13, rsi
 
 mov rdi, [r12 + ruta_ciudadA_offset]
 mov rsi, [r13 + ruta_ciudadA_offset]
-call c_cmp ; comparo por el nombre de ciudad A
+call c_cmp ; comparo por la ciudad A
 
 cmp rax, 0
-jne rutasComparadas
+jne rutasComparadas ; si son distintas, termine la comparacion
 
 mov rdi, [r12 + ruta_ciudadB_offset]
 mov rsi, [r13 + ruta_ciudadB_offset]
-call c_cmp ; si son la misma ciudad, comparo por el nombre de ciudad B
+call c_cmp ; si son la misma ciudad, comparo por la ciudad B
 
 rutasComparadas:
 pop r13
@@ -393,24 +384,20 @@ push rbp
 mov rbp, rsp
 push rbx
 
-call str_copy
-
-mov rbx, rax
+call str_copy ; copio el nombre
+mov rbx, rax ; y lo guardo
 
 mov rdi, redCaminera_size
-call malloc WRT ..plt
+call malloc WRT ..plt ; creo la red
 
-mov [rax + redCaminera_nombre_offset], rbx
-
+mov [rax + redCaminera_nombre_offset], rbx ; le guardo su nombre
 mov rbx, rax
 
 call l_crear
-
-mov [rbx + redCaminera_ciudades_offset], rax
+mov [rbx + redCaminera_ciudades_offset], rax ; creo una lista de cidudades vacia
 
 call l_crear
-
-mov [rbx + redCaminera_rutas_offset], rax
+mov [rbx + redCaminera_rutas_offset], rax ; creo una lista de rutas vacia
 
 mov rax, rbx
 
@@ -431,25 +418,23 @@ mov r12, rsi
 mov r13, rdx
 
 call obtenerCiudad
-
 cmp rax, 0
-jne rc_agregarCiudad_done
+jne rc_agregarCiudad_done ; si la ciudad existe, no agregar
 
 mov rdi, r12
 mov rsi, r13
 
-call c_crear
+call c_crear ; creo la nueva ciudad
 
 mov rdi, rbx
-add rdi, redCaminera_ciudades_offset
+add rdi, redCaminera_ciudades_offset ; puntero doble a lista de ciudades
 mov rsi, rax
 mov rdx, c_borrar
 mov rcx, c_cmp
 
-call l_agregarOrdenado
+call l_agregarOrdenado ; la agrego en orden
 
 rc_agregarCiudad_done:
-
 pop r13
 pop r12
 pop rbx
@@ -521,7 +506,6 @@ mov rcx, r_cmp
 call l_agregarOrdenado
 
 rc_agregarRuta_done:
-
 pop r15
 pop r14
 pop r13
@@ -545,10 +529,10 @@ mov rdi, [rbx + redCaminera_rutas_offset]
 call l_borrarTodo ; borro las rutas
 
 mov rdi, [rbx + redCaminera_nombre_offset]
-call free WRT ..plt
+call free WRT ..plt ; borro el nombre
 
 mov rdi, rbx
-call free WRT ..plt
+call free WRT ..plt ; borro la red
 
 pop rbx
 pop rbp
@@ -563,8 +547,6 @@ mov rbp, rsp
 push rbx
 push r12
 push r13
-push r14
-push r15
 
 mov r12, rsi
 
@@ -592,9 +574,6 @@ encontreCiudad:
 mov rax, [rbx + nodo_dato_offset]
 
 obtenerCiudad_done:
-
-pop r15
-pop r14
 pop r13
 pop r12
 pop rbx
@@ -646,7 +625,6 @@ encontreRuta:
 mov rax, [rbx + nodo_dato_offset]
 
 obtenerRuta_done:
-
 pop r13
 pop r12
 pop rbx
@@ -686,7 +664,6 @@ je ciudadMasPoblada_empty
 mov rax, [rax + nodo_dato_offset]
 
 ciudadMasPoblada_empty:
-
 pop rbx
 pop rbp
 ret
@@ -696,8 +673,6 @@ rutaMasLarga:
 push rbp
 mov rbp, rsp
 push rbx
-push r12
-push r13
 
 mov rbx, [rdi + redCaminera_rutas_offset]
 mov rbx, [rbx + lista_primero_offset]
@@ -726,8 +701,6 @@ je rutaMasLarga_empty
 mov rax, [rax + nodo_dato_offset]
 
 rutaMasLarga_empty:
-pop r13
-pop r12
 pop rbx
 pop rbp
 ret
@@ -767,8 +740,6 @@ totalDeDistancia:
 push rbp
 mov rbp, rsp
 push rbx
-push r12
-push r13
 
 pxor xmm0, xmm0
 
@@ -787,11 +758,6 @@ mov rbx, [rbx + nodo_siguiente_offset]
 jmp totalDeDistancia_loop
 
 totalDeDistancia_done:
-
-movq rax, xmm0
-
-pop r13
-pop r12
 pop rbx
 pop rbp
 ret
@@ -816,7 +782,6 @@ add rax, r8
 mov rbx, [rbx + nodo_siguiente_offset]
 jmp totalDePoblacion_loop
 totalDePoblacion_done:
-
 pop rbx
 pop rbp
 ret
@@ -921,7 +886,6 @@ mov r13, r15
 jmp ciudadMasComunicada_loop
 
 ciudadMasComunicada_done:
-
 mov rax, r13
 
 pop r15
@@ -939,15 +903,12 @@ str_copy:
 push rbp
 mov rbp, rsp
 push rbx
-push r12
-push r13
 
-mov r12, rdi ; me guardo la vieja string
+mov rbx, rdi ; me guardo la vieja string
 
 xor rdi, rdi
-
 str_count_loop: ; cuento el tamaño
-cmp [r12 + rdi], byte 0
+cmp [rbx + rdi], byte 0 ; si era el caracter nulo, termine
 je str_count_end
 inc rdi
 jmp str_count_loop
@@ -955,19 +916,16 @@ jmp str_count_loop
 str_count_end:
 inc rdi ; siempre cuento uno más, para tener en cuenta el caracter nulo
 
-mov r13, rdi
-
 call malloc WRT ..plt ; pido memoria para la copia
 
-str_copy_loop: ; copio en reversa
-dec r13 ; siempre decremento primero poruqe el tamaño es mayor a la ult pos
-mov bl, [r12 + r13]
-mov [rax + r13], bl
-cmp r13, 0
+xor rdi, rdi
+str_copy_loop: ; copio la string
+mov r8b, [rbx + rdi]
+mov [rax + rdi], r8b
+inc rdi
+cmp r8b, 0 ; si era el caracter nulo, termine
 jne str_copy_loop
 
-pop r13
-pop r12
 pop rbx
 pop rbp
 ret
