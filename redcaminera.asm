@@ -899,23 +899,20 @@ je ciudadMasComunicada_done
 mov r13, [r12 + nodo_dato_offset]
 
 mov rdi, rbx
-mov rsi, r13
+mov rsi, [r13 + ciudad_nombre_offset]
 call cantidadDeCaminos
 
 mov r14, rax
 
-mov r12, [r12 + nodo_siguiente_offset]
-
 ciudadMasComunicada_loop:
+mov r12, [r12 + nodo_siguiente_offset]
 cmp r12, 0
 je ciudadMasComunicada_done
 
 mov r15, [r12 + nodo_dato_offset]
 mov rdi, rbx
-mov rsi, r15
+mov rsi, [r15 + ciudad_nombre_offset]
 call cantidadDeCaminos
-
-mov r12, [r12 + nodo_siguiente_offset]
 
 cmp r14, rax
 jge ciudadMasComunicada_loop
