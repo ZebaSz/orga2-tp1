@@ -166,7 +166,7 @@ mov rdi, [rdi + nodo_dato_offset]
 mov rsi, [r15 + nodo_dato_offset]
 
 call r14
-cmp rax, 0
+cmp rax, 1
 jl l_agregarOrdenado_done
 
 mov r12, [r12]
