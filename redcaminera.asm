@@ -42,12 +42,15 @@ extern malloc
 
 global l_crear
 l_crear:
+push rbp
+mov rbp, rsp
 mov rdi, lista_size
 call malloc WRT ..plt ; pido memoria para la lista
 xor rsi, rsi
 mov [rax + lista_longitud_offset], dword 0 ; longitud vacia
 mov [rax + lista_primero_offset], rsi ; primero nulo
 mov [rax + lista_ultimo_offset], rsi ; ultimo nulo
+pop rbp
 ret
 
 
@@ -55,6 +58,7 @@ global l_agregarAdelante
 l_agregarAdelante:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -86,6 +90,7 @@ global l_agregarAtras
 l_agregarAtras:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -122,6 +127,7 @@ global l_agregarOrdenado
 l_agregarOrdenado:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -211,6 +217,7 @@ mov [rbx + lista_longitud_offset], r8d ; aumento la longitud de la lista
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -218,6 +225,7 @@ global l_borrarTodo
 l_borrarTodo:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -248,6 +256,7 @@ call free WRT ..plt ; borro la lista
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -259,21 +268,19 @@ push rbp
 mov rbp, rsp
 push rbx
 push r12
-push r13
 
-mov r13, rsi ; me guardo la población
+mov r12, rsi ; me guardo la población
 
 call str_copy
 
-mov r12, rax ; me guardo el nombre copiado
+mov rbx, rax ; me guardo el nombre copiado
 
 mov rdi, ciudad_size
 call malloc WRT ..plt ; pido memoria para la ciudad
 
-mov [rax + ciudad_nombre_offset], r12 ; le guardo su informacion
-mov [rax + ciudad_poblacion_offset], r13
+mov [rax + ciudad_nombre_offset], rbx ; le guardo su informacion
+mov [rax + ciudad_poblacion_offset], r12
 
-pop r13
 pop r12
 pop rbx
 pop rbp
@@ -281,15 +288,21 @@ ret
 
 global c_cmp
 c_cmp:
+push rbp
+mov rbp, rsp
+
 mov rdi, [rdi + ciudad_nombre_offset]
 mov rsi, [rsi + ciudad_nombre_offset]
 call str_cmp ; comparo las ciudades por sus nombres
+
+pop rbp
 ret
 
 global c_borrar
 c_borrar:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 mov rbx, rdi
@@ -301,6 +314,7 @@ mov rdi, rbx
 call free WRT ..plt ; borro la ciudad
 
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -310,6 +324,7 @@ global r_crear
 r_crear:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -339,6 +354,7 @@ r_crear_done:
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -348,24 +364,22 @@ push rbp
 mov rbp, rsp
 push rbx
 push r12
-push r13
 
-mov r12, rdi ; me guardo las rutas
-mov r13, rsi
+mov rbx, rdi ; me guardo las rutas
+mov r12, rsi
 
-mov rdi, [r12 + ruta_ciudadA_offset]
-mov rsi, [r13 + ruta_ciudadA_offset]
+mov rdi, [rbx + ruta_ciudadA_offset]
+mov rsi, [r12 + ruta_ciudadA_offset]
 call c_cmp ; comparo por la ciudad A
 
 cmp rax, 0
 jne rutasComparadas ; si son distintas, termine la comparacion
 
-mov rdi, [r12 + ruta_ciudadB_offset]
-mov rsi, [r13 + ruta_ciudadB_offset]
+mov rdi, [rbx + ruta_ciudadB_offset]
+mov rsi, [r12 + ruta_ciudadB_offset]
 call c_cmp ; si son la misma ciudad, comparo por la ciudad B
 
 rutasComparadas:
-pop r13
 pop r12
 pop rbx
 pop rbp
@@ -373,7 +387,10 @@ ret
 
 global r_borrar
 r_borrar:
+push rbp
+mov rbp, rsp
 call free WRT ..plt
+pop rbp
 ret
 
 ; RED CAMINERA
@@ -382,6 +399,7 @@ global rc_crear
 rc_crear:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 call str_copy ; copio el nombre
@@ -402,6 +420,7 @@ mov [rbx + redCaminera_rutas_offset], rax ; creo una lista de rutas vacia
 mov rax, rbx
 
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -409,6 +428,7 @@ global rc_agregarCiudad
 rc_agregarCiudad:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -438,6 +458,7 @@ rc_agregarCiudad_done:
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -449,7 +470,6 @@ push rbx
 push r12
 push r13
 push r14
-push r15
 
 mov rbx, rdi
 mov r12, rsi
@@ -506,7 +526,6 @@ mov rcx, r_cmp
 call l_agregarOrdenado
 
 rc_agregarRuta_done:
-pop r15
 pop r14
 pop r13
 pop r12
@@ -518,6 +537,7 @@ global rc_borrarTodo
 rc_borrarTodo:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 mov rbx, rdi ; me guardo la red a borrar
@@ -535,6 +555,7 @@ mov rdi, rbx
 call free WRT ..plt ; borro la red
 
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -546,7 +567,6 @@ push rbp
 mov rbp, rsp
 push rbx
 push r12
-push r13
 
 mov r12, rsi
 
@@ -574,7 +594,6 @@ encontreCiudad:
 mov rax, [rbx + nodo_dato_offset]
 
 obtenerCiudad_done:
-pop r13
 pop r12
 pop rbx
 pop rbp
@@ -584,6 +603,7 @@ global obtenerRuta
 obtenerRuta:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -628,6 +648,7 @@ obtenerRuta_done:
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -635,6 +656,7 @@ global ciudadMasPoblada
 ciudadMasPoblada:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 mov rbx, [rdi + redCaminera_ciudades_offset]
@@ -665,6 +687,7 @@ mov rax, [rax + nodo_dato_offset]
 
 ciudadMasPoblada_empty:
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -672,6 +695,7 @@ global rutaMasLarga
 rutaMasLarga:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 mov rbx, [rdi + redCaminera_rutas_offset]
@@ -702,6 +726,7 @@ mov rax, [rax + nodo_dato_offset]
 
 rutaMasLarga_empty:
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -709,6 +734,7 @@ global ciudadesMasLejanas
 ciudadesMasLejanas:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -732,6 +758,7 @@ ciudadesMasLejanas_done:
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -739,6 +766,7 @@ global totalDeDistancia
 totalDeDistancia:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 pxor xmm0, xmm0
@@ -759,6 +787,7 @@ jmp totalDeDistancia_loop
 
 totalDeDistancia_done:
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -766,6 +795,7 @@ global totalDePoblacion
 totalDePoblacion:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 mov rbx, rdi
@@ -783,6 +813,7 @@ mov rbx, [rbx + nodo_siguiente_offset]
 jmp totalDePoblacion_loop
 totalDePoblacion_done:
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -794,7 +825,6 @@ push rbx
 push r12
 push r13
 push r14
-push r15
 
 mov rbx, [rdi + redCaminera_rutas_offset]
 mov rbx, [rbx + lista_primero_offset]
@@ -834,7 +864,6 @@ cantidadDeCaminos_done:
 
 mov rax, r13
 
-pop r15
 pop r14
 pop r13
 pop r12
@@ -846,6 +875,7 @@ global ciudadMasComunicada
 ciudadMasComunicada:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 push r12
 push r13
@@ -893,6 +923,7 @@ pop r14
 pop r13
 pop r12
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
@@ -902,6 +933,7 @@ global str_copy
 str_copy:
 push rbp
 mov rbp, rsp
+sub rsp, 8 ; alinear el stack frame
 push rbx
 
 mov rbx, rdi ; me guardo la vieja string
@@ -927,11 +959,14 @@ cmp r8b, 0 ; si era el caracter nulo, termine
 jne str_copy_loop
 
 pop rbx
+add rsp, 8 ; deshacer alineamiento de stack frame
 pop rbp
 ret
 
 global str_cmp
 str_cmp:
+push rbp
+mov rbp, rsp
 xor rdx, rdx
 xor rcx, rcx
 xor rax, rax
@@ -955,4 +990,5 @@ str_cmp_lower:
 inc rax
 
 str_cmp_end:
+pop rbp
 ret
