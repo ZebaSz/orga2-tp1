@@ -150,10 +150,8 @@ xor rdi, rdi
 mov [r15 + nodo_siguiente_offset], rdi ; seteo nodos a null por default
 mov [r15 + nodo_anterior_offset], rdi
 
-mov r12, rbx
-add r12, lista_primero_offset ; tomo el puntero doble al primero de la lista
-mov r13, rbx
-add r13, lista_ultimo_offset ; y al ultimo de la lista
+lea r12, [rbx + lista_primero_offset] ; tomo el puntero doble al primero de la lista
+lea r13, [rbx + lista_ultimo_offset] ; y al ultimo de la lista
 xor rdi, rdi
 cmp [r12], rdi ; si no hay primero
 je l_agregarOrdenado_unico ; entonces lo agrego adelante y atras
@@ -179,8 +177,7 @@ je l_agregarOrdenado_ultimo ; inserto al final
 jmp l_agregarOrdenado_loop
 
 l_agregarOrdenado_ultimo:
-mov r13, rbx
-add r13, lista_ultimo_offset ; recupero el puntero doble del ultimo de la lista
+lea r13, [rbx + lista_ultimo_offset] ; recupero el puntero doble del ultimo de la lista
 mov r8, [r13] ; el anterior es el viejo ultimo
 xor r9, r9 ; no hay siguiente
 jmp l_agregarOrdenado_guardarPrevios
@@ -446,8 +443,7 @@ mov rsi, r13
 
 call c_crear ; creo la nueva ciudad
 
-mov rdi, rbx
-add rdi, redCaminera_ciudades_offset ; puntero doble a lista de ciudades
+lea rdi, [rbx + redCaminera_ciudades_offset] ; puntero doble a lista de ciudades
 mov rsi, rax
 mov rdx, c_borrar
 mov rcx, c_cmp
@@ -517,8 +513,7 @@ call r_crear
 cmp rax, 0
 je rc_agregarRuta_done ; si la ruta no es valida, no agregar ruta
 
-mov rdi, rbx
-add rdi, redCaminera_rutas_offset
+lea rdi, [rbx + redCaminera_rutas_offset]
 mov rsi, rax
 mov rdx, r_borrar
 mov rcx, r_cmp
@@ -653,31 +648,26 @@ pop rbp
 ret
 
 global ciudadMasPoblada
-ciudadMasPoblada:
-push rbp
-mov rbp, rsp
-sub rsp, 8 ; alinear el stack frame
-push rbx
+ciudadMasPoblada: ; esta funcion es una hoja y no requiere stackframe
+mov rdi, [rdi + redCaminera_ciudades_offset]
+mov rdi, [rdi + lista_primero_offset]
 
-mov rbx, [rdi + redCaminera_ciudades_offset]
-mov rbx, [rbx + lista_primero_offset]
+mov rax, rdi
 
-mov rax, rbx
-
-cmp rbx, 0
-je ciudadMasPoblada_done
+cmp rdi, 0
+je ciudadMasPoblada_empty
 
 ciudadMasPoblada_loop:
-mov rbx, [rbx + nodo_siguiente_offset]
-cmp rbx, 0
+mov rdi, [rdi + nodo_siguiente_offset]
+cmp rdi, 0
 je ciudadMasPoblada_done
 mov r8, [rax + nodo_dato_offset]
 mov r8, [r8 + ciudad_poblacion_offset]
-mov r9, [rbx + nodo_dato_offset]
+mov r9, [rdi + nodo_dato_offset]
 mov r9, [r9 + ciudad_poblacion_offset]
 cmp r8, r9
 jge ciudadMasPoblada_loop
-mov rax, rbx
+mov rax, rdi
 jmp ciudadMasPoblada_loop
 
 ciudadMasPoblada_done:
@@ -686,37 +676,29 @@ je ciudadMasPoblada_empty
 mov rax, [rax + nodo_dato_offset]
 
 ciudadMasPoblada_empty:
-pop rbx
-add rsp, 8 ; deshacer alineamiento de stack frame
-pop rbp
 ret
 
 global rutaMasLarga
-rutaMasLarga:
-push rbp
-mov rbp, rsp
-sub rsp, 8 ; alinear el stack frame
-push rbx
+rutaMasLarga: ; esta funcion es una hoja y no requiere stackframe
+mov rdi, [rdi + redCaminera_rutas_offset]
+mov rdi, [rdi + lista_primero_offset]
 
-mov rbx, [rdi + redCaminera_rutas_offset]
-mov rbx, [rbx + lista_primero_offset]
-
-mov rax, rbx
-cmp rbx, 0
+mov rax, rdi
+cmp rdi, 0
 je rutaMasLarga_done
 
 rutaMasLarga_loop:
-mov rbx, [rbx + nodo_siguiente_offset]
-cmp rbx, 0
+mov rdi, [rdi + nodo_siguiente_offset]
+cmp rdi, 0
 je rutaMasLarga_done
 mov r8, [rax + nodo_dato_offset]
 movq xmm0, [r8 + ruta_distancia_offset]
-mov r9, [rbx + nodo_dato_offset]
+mov r9, [rdi + nodo_dato_offset]
 movq xmm1, [r9 + ruta_distancia_offset]
 
 comisd xmm0, xmm1
 jnb rutaMasLarga_loop
-mov rax, rbx
+mov rax, rdi
 jmp rutaMasLarga_loop
 
 rutaMasLarga_done:
@@ -725,9 +707,6 @@ je rutaMasLarga_empty
 mov rax, [rax + nodo_dato_offset]
 
 rutaMasLarga_empty:
-pop rbx
-add rsp, 8 ; deshacer alineamiento de stack frame
-pop rbp
 ret
 
 global ciudadesMasLejanas
@@ -763,58 +742,40 @@ pop rbp
 ret
 
 global totalDeDistancia
-totalDeDistancia:
-push rbp
-mov rbp, rsp
-sub rsp, 8 ; alinear el stack frame
-push rbx
-
+totalDeDistancia: ; esta funcion es una hoja y no requiere stackframe
 pxor xmm0, xmm0
 
-mov rbx, [rdi + redCaminera_rutas_offset]
-mov rbx, [rbx + lista_primero_offset]
+mov rdi, [rdi + redCaminera_rutas_offset]
+mov rdi, [rdi + lista_primero_offset]
 
 totalDeDistancia_loop:
-cmp rbx, 0
+cmp rdi, 0
 je totalDeDistancia_done
 
-mov r8, [rbx + nodo_dato_offset]
+mov r8, [rdi + nodo_dato_offset]
 
 addsd xmm0, [r8 + ruta_distancia_offset]
 
-mov rbx, [rbx + nodo_siguiente_offset]
+mov rdi, [rdi + nodo_siguiente_offset]
 jmp totalDeDistancia_loop
 
 totalDeDistancia_done:
-pop rbx
-add rsp, 8 ; deshacer alineamiento de stack frame
-pop rbp
 ret
 
 global totalDePoblacion
-totalDePoblacion:
-push rbp
-mov rbp, rsp
-sub rsp, 8 ; alinear el stack frame
-push rbx
-
-mov rbx, rdi
-mov rbx, [rbx + redCaminera_ciudades_offset]
-mov rbx, [rbx + lista_primero_offset]
+totalDePoblacion: ; esta funcion es una hoja y no requiere stackframe
+mov rdi, [rdi + redCaminera_ciudades_offset]
+mov rdi, [rdi + lista_primero_offset]
 
 xor rax, rax
 totalDePoblacion_loop:
-cmp rbx, 0
+cmp rdi, 0
 je totalDePoblacion_done
-mov r8, [rbx + nodo_dato_offset]
-mov r8, [r8 + ciudad_poblacion_offset]
-add rax, r8
-mov rbx, [rbx + nodo_siguiente_offset]
+mov r8, [rdi + nodo_dato_offset]
+add rax, [r8 + ciudad_poblacion_offset]
+mov rdi, [rdi + nodo_siguiente_offset]
 jmp totalDePoblacion_loop
 totalDePoblacion_done:
-pop rbx
-add rsp, 8 ; deshacer alineamiento de stack frame
-pop rbp
 ret
 
 global cantidadDeCaminos
@@ -964,22 +925,17 @@ pop rbp
 ret
 
 global str_cmp
-str_cmp:
-push rbp
-mov rbp, rsp
-xor rdx, rdx
+str_cmp: ; esta funcion es una hoja y no requiere stackframe
 xor rcx, rcx
 xor rax, rax
 
 str_cmp_loop:
-mov r8b, [rdi + rdx]
-mov r9b, [rsi + rcx]
-cmp r8b, r9b
+mov r8b, [rdi + rcx]
+cmp r8b, [rsi + rcx]
 jg str_cmp_greater
 jl str_cmp_lower
 cmp r8b, byte 0
 je str_cmp_end
-inc rdx
 inc rcx
 jmp str_cmp_loop
 
@@ -990,5 +946,4 @@ str_cmp_lower:
 inc rax
 
 str_cmp_end:
-pop rbp
 ret
