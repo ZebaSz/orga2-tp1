@@ -1,7 +1,3 @@
-%define uint32_t 4
-%define uint64_t 8
-%define ptr 8
-
 ; typedef struct lista_t
 %define lista_longitud_offset 0 ; uint32_t
 %define lista_primero_offset 4 ; nodo_t*
