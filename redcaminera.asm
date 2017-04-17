@@ -46,10 +46,9 @@ push rbp
 mov rbp, rsp
 mov rdi, lista_size
 call malloc WRT ..plt ; pido memoria para la lista
-xor rsi, rsi
-mov [rax + lista_longitud_offset], dword 0 ; longitud vacia
-mov [rax + lista_primero_offset], rsi ; primero nulo
-mov [rax + lista_ultimo_offset], rsi ; ultimo nulo
+mov dword [rax + lista_longitud_offset], 0 ; longitud vacia
+mov qword [rax + lista_primero_offset], 0 ; primero nulo
+mov qword [rax + lista_ultimo_offset], 0 ; ultimo nulo
 pop rbp
 ret
 
@@ -73,8 +72,7 @@ call malloc WRT ..plt ; pido memoria para nuevo nodo
 mov [rax + nodo_dato_offset], r12 ; muevo el dato
 mov [rax + nodo_borrar_offset], r13 ; muevo func borrar
 
-xor rdi, rdi
-mov [rax + nodo_anterior_offset], rdi ; seteo el anterior a null
+mov qword [rax + nodo_anterior_offset], 0 ; seteo el anterior a null
 
 mov rdi, [rbx + lista_primero_offset] ; me fijo si había un primer nodo
 mov [rax + nodo_siguiente_offset], rdi
@@ -105,8 +103,7 @@ call malloc WRT ..plt
 mov [rax + nodo_dato_offset], r12
 mov [rax + nodo_borrar_offset], r13
 
-xor rdi, rdi
-mov [rax + nodo_siguiente_offset], rdi
+mov qword [rax + nodo_siguiente_offset], 0
 
 mov rdi, [rbx + lista_ultimo_offset]
 mov [rax + nodo_anterior_offset], rdi
@@ -146,19 +143,17 @@ mov r15, rax ; y lo guardo
 
 mov [r15 + nodo_dato_offset], r12 ; le seteo el dato
 mov [r15 + nodo_borrar_offset], r13 ; y la funcion borrar
-xor rdi, rdi
-mov [r15 + nodo_siguiente_offset], rdi ; seteo nodos a null por default
-mov [r15 + nodo_anterior_offset], rdi
+mov qword [r15 + nodo_siguiente_offset], 0 ; seteo nodos a null por default
+mov qword [r15 + nodo_anterior_offset], 0
 
 lea r12, [rbx + lista_primero_offset] ; tomo el puntero doble al primero de la lista
 lea r13, [rbx + lista_ultimo_offset] ; y al ultimo de la lista
-xor rdi, rdi
-cmp [r12], rdi ; si no hay primero
+cmp qword [r12], 0 ; si no hay primero
 je l_agregarOrdenado_unico ; entonces lo agrego adelante y atras
 
 l_agregarOrdenado_loop:
 mov r13, [r12]
-add r13, nodo_anterior_offset ; avanzo el doble puntero siguiente
+lea r13, [r13 + nodo_anterior_offset] ; avanzo el doble puntero siguiente
 
 mov rdi, [r12]
 mov rdi, [rdi + nodo_dato_offset] ; tomo el dato del siguiente
@@ -169,9 +164,8 @@ cmp rax, 1 ; si el siguiente es mayor o igual
 jl l_agregarOrdenado_done ; inserto aca
 
 mov r12, [r12]
-add r12, nodo_siguiente_offset ; avanzo el doble puntero anterior
-xor rdi, rdi
-cmp [r12], rdi ; si el siguiente es nulo
+lea r12, [r12 + nodo_siguiente_offset] ; avanzo el doble puntero anterior
+cmp qword [r12], 0 ; si el siguiente es nulo
 je l_agregarOrdenado_ultimo ; inserto al final
 
 jmp l_agregarOrdenado_loop
@@ -188,8 +182,7 @@ mov r9, [r12] ; el siguiente es el viejo primero
 jmp l_agregarOrdenado_guardarPrevios
 
 l_agregarOrdenado_done:
-xor rdi, rdi
-cmp [r13], rdi
+cmp qword [r13], 0
 je l_agregarOrdenado_primero
 
 mov r8, [r12]
@@ -934,7 +927,7 @@ mov r8b, [rdi + rcx]
 cmp r8b, [rsi + rcx]
 jg str_cmp_greater
 jl str_cmp_lower
-cmp r8b, byte 0
+cmp r8b, 0
 je str_cmp_end
 inc rcx
 jmp str_cmp_loop
