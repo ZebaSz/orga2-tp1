@@ -18,7 +18,7 @@ int main (void){
     ruta* rMas = rutaMasLarga(rc);
 
     FILE* output;
-    output = fopen("PepeGuapo.txt", "a");
+    output = fopen("PepeGuapo.txt", "w");
     fprintf(output, "[%s,%lu]\n", cMas->nombre, cMas->poblacion);
     fprintf(output, "[%s,%s,%.1f]\n", rMas->ciudadA->nombre, rMas->ciudadB->nombre, rMas->distancia);
     fclose(output);
