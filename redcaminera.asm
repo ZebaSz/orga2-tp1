@@ -666,7 +666,7 @@ mov r8, [r8 + ciudad_poblacion_offset]
 mov r9, [rdi + nodo_dato_offset]
 mov r9, [r9 + ciudad_poblacion_offset]
 cmp r8, r9
-jge ciudadMasPoblada_loop
+jae ciudadMasPoblada_loop
 mov rax, rdi
 jmp ciudadMasPoblada_loop
 
@@ -871,7 +871,7 @@ mov rsi, [r15 + ciudad_nombre_offset]
 call cantidadDeCaminos
 
 cmp r14, rax
-jge ciudadMasComunicada_loop
+jae ciudadMasComunicada_loop
 mov r14, rax
 mov r13, r15
 jmp ciudadMasComunicada_loop
